@@ -1,0 +1,56 @@
+SELECT ST_BUFFER(geom, 1609, 'endcap=round join=round') as geom
+FROM pgis_xia.i5seattle_p;
+
+SELECT ST_UNION(ST_BUFFER(geom, 1609, 'endcap=round join=round')) as geom
+FROM pgis_xia.i5seattle_p;
+
+SELECT DISTINCT ff.ff_id, fr.franchise_name, ff.geom
+FROM pgis_xia.fastfoods AS ff
+JOIN pgis_xia.lu_franchises AS fr ON ff.franchise = fr.franchise_code
+JOIN pgis_xia.i5seattle_p AS i5 ON ST_DWITHIN(ff.geom, i5.geom, 1609*1)
+ORDER BY ff.ff_id;
+
+CREATE VIEW pGIS_xia.ffwithin1 AS
+SELECT DISTINCT ff.ff_id, fr.franchise_name, ff.geom
+FROM pgis_xia.fastfoods AS ff
+JOIN pgis_xia.lu_franchises AS fr ON ff.franchise = fr.franchise_code
+JOIN pgis_xia.i5seattle_p AS i5 ON ST_DWITHIN(ff.geom, i5.geom, 1609*1)
+ORDER BY ff.ff_id;
+
+SELECT fr.franchise_name, COUNT (DISTINCT ff.ff_id) AS tot
+FROM pgis_xia.fastfoods AS ff
+JOIN pgis_xia.lu_franchises AS fr ON ff.franchise = fr.franchise_code
+JOIN pgis_xia.i5seattle_p AS i5 ON ST_DWITHIN(ff.geom, i5.geom, 1609*1)
+GROUP BY fr.franchise_name
+ORDER BY tot DESC;
+
+SELECT county, ST_CENTROID(geom) AS centroid 
+FROM pgis_xia.kingcounty;
+
+SELECT county, ST_AsText(ST_CENTROID(geom)) AS centroid 
+FROM pgis_xia.kingcounty;
+
+SELECT * FROM pgis_xia.lu_franchises
+SELECT * FROM pgis_xia.fastfoods
+SELECT * FROM pgis_xia.kingcounty
+SELECT * FROM pgis_xia.i5seattle_p
+
+SELECT distinct franchise_name
+FROM pgis_xia.lu_franchises fr
+JOIN pgis_xia.fastfoods ff  ON fr.franchise_code = ff.franchise
+JOIN pgis_xia.kingcounty kc ON ST_CONTAINS (kc.geom, ff.geom)
+
+SELECT ST_DISTANCE(ST_GeometryFromText('point(-118.4079 33.9434)', 4326), 
+ST_GeometryFromText('point(2.3490 49.0083)', 4326));
+
+SELECT ST_DISTANCE(
+ST_GeographyFromText('point(-118.4079 33.9434)'), 
+ST_GeographyFromText('point(2.3490 49.0083)'));
+
+SELECT fr.franchise_name, 
+ST_distance(ff.geom, ST_centroid(pgis_xia.kingcounty.geom)) AS Distance
+FROM pgis_xia.lu_franchises fr
+JOIN pgis_xia.fastfoods ff 
+ON ff.franchise = fr.franchise_code, 
+pgis_xia.kingcounty
+ORDER BY Distance ASC;
