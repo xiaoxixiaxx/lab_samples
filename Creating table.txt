@@ -1,0 +1,78 @@
+CREATE TABLE whatsHappening (
+	id serial PRIMARY KEY,
+	location varchar(20) NOT NULL,
+	hdate date,
+	content varchar(200),
+	source text);
+
+CREATE TABLE city (
+	cityid serial PRIMARY KEY,
+	name varchar(20) NOT NULL,
+	lat float NOT NULL,
+	long float NOT NULL);
+
+INSERT INTO whatsHappening (cityid, hDate, content, source)
+	VALUES ('3', '2020-10-26', 'Moon may hold frozen water in more places than suspected',
+		   'https://www.usnews.com/news/news/articles/2020-10-26/moon-may-hold-frozen-water-in-more-places-than-suspected');
+		   
+INSERT INTO city (name, lat, long)
+	VALUES ('Cape Canaveral, Fla.', 28.531039, -80.682421);
+	
+
+
+INSERT INTO whatsHappening (cityid, hDate, content, source)
+	VALUES ('4', '2020-10-30', 'Powerful earthquake strikes Turkey and Greece, killing at least 19',
+		   'https://www.cbsnews.com/news/greece-earthquake-turkey-magnitude-death-toll-today-2020-10-30/');
+		   
+INSERT INTO city (name, lat, long)
+	VALUES ('Island of Samos', 37.763104, 26.978100);
+	
+
+
+INSERT INTO whatsHappening (cityid, hDate, content, source)
+	VALUES ('5', '2020-10-08', 'China joins COVAX initiative for Covid-19 vaccine distribution',
+		   'https://www.cnbc.com/2020/10/09/china-joins-covax-initiative-for-covid-19-vaccine-distribution-.html');
+		   
+INSERT INTO city (name, lat, long)
+	VALUES ('Beijing', 39.927400, 116.404019);
+
+SELECT * FROM city;
+
+SELECT * FROM whatshappening;
+
+SELECT * FROM whatwhere;
+
+INSERT INTO whatsHappening (location, hDate, content, source)
+	VALUES ('Seattle', '2020-04-19', 'What coronavirus tells us about climate change on Earth Day 50th anniversary',
+		   'https://www.seattletime.com/seattle-news/environment/what-coronavirus-tells-us-about-climate-on-earth-days
+			-50th-anniversary/');
+
+INSERT INTO city (name, lat, long)
+	VALUES ('Seattle', 47.608013, -122.33516);
+	
+ALTER TABLE whatshappening ADD COLUMN cityid INTEGER;
+
+UPDATE whatshappening
+SET cityid = 1
+WHERE ID = 1;
+
+ALTER TABLE whatshappening
+ADD CONSTRAINT constraint_fk
+FOREIGN KEY (cityid)
+REFERENCES city(cityid)
+ON DELETE CASCADE
+
+ALTER TABLE whatshappening
+DROP COLUMN location;
+
+SELECT *
+FROM city c
+join whatshappening w
+ON c.cityid = w.id
+
+CREATE VIEW whatwhere AS
+SELECT * FROM whatshappening
+INNER JOIN city USING (cityid);
+
+
+SELECT * FROM whatwhere;
