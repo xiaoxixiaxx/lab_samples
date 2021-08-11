@@ -1,0 +1,91 @@
+CREATE TABLE pGIS_xia.new_lu_franchises(
+                         franchise_code char(1) PRIMARY KEY,
+                         franchise_name varchar(100));
+INSERT INTO pGIS_xia.new_lu_franchises (franchise_code, franchise_name)
+VALUES ('a', 'Arbys'),
+       ('c', 'Chick-fil-A'),
+       ('d', 'Dicks'),
+       ('f', 'Five Guys'),
+       ('h', 'Herfys Burger'),
+       ('k', 'Krispy Krunchy Chicken'),
+       ('p', 'PICK-QUICK Drive-In'),
+       ('r', 'Ranch Drive-In'),
+       ('s', 'Subway'),
+       ('z', 'Zest Fast Food');
+CREATE TABLE pgis_xia.new_fastfoods (
+                                    franchise char(1) NOT NULL,
+                                    lat double precision,
+                                    lon double precision);
+COPY pgis_xia.new_fastfoods FROM 'C:\Lab 6\new_franchises.csv' DELIMITER ',';
+SELECT * FROM pgis_xia.lu_franchises
+SELECT * FROM pgis_xia.fastfoods
+SELECT * FROM pgis_xia.i5seattle_p
+SELECT * FROM pgis_xia.new_lu_franchises
+SELECT * FROM pgis_xia.new_fastfoods
+ALTER TABLE pgis_xia.new_fastfoods ADD COLUMN ff_id SERIAL PRIMARY KEY;
+SELECT AddGeometryColumn ('pgis_xia','new_fastfoods','geom', 2163,'POINT',2);
+         UPDATE pgis_xia.new_fastfoods
+                              SET geom = ST_Transform
+                             (ST_GeomFromText ('POINT('||lon||' '||lat||')', 4326), 2163);
+         CREATE INDEX idx_new_fastfoods_geom ON pGIS_xia.new_fastfoods USING gist(geom);		 
+ALTER TABLE pgis_xia.new_fastfoods ADD CONSTRAINT fk_fastfoods_franchise
+                                                FOREIGN KEY (franchise)
+                                               REFERENCES pgis_xia.new_lu_franchises (franchise_code)
+                                               ON UPDATE CASCADE ON DELETE RESTRICT;
+											   
+SELECT ADDgeometrycolumn('pgis_xia','i5seattle_p','geom',2163,'multilinestring',2);
+UPDATE pgis_xia.i5seattle_p SET geom = ST_Transform(geom4326, 2163);
+
+SELECT ST_BUFFER(geom, 1609, 'endcap=round join=round') as geom
+FROM pgis_xia.i5seattle_p;
+
+SELECT DISTINCT ff.ff_id, fr.franchise_name, ff.geom
+FROM pgis_xia.new_fastfoods AS ff
+JOIN pgis_xia.new_lu_franchises AS fr ON ff.franchise = fr.franchise_code
+JOIN pgis_xia.i5seattle_p AS i5 ON ST_DWITHIN(ff.geom, i5.geom, 1609*2)
+ORDER BY ff.ff_id;
+
+CREATE VIEW pGIS_xia.ffwithin2 AS
+SELECT DISTINCT ff.ff_id, fr.franchise_name, ff.geom
+FROM pgis_xia.new_fastfoods AS ff
+JOIN pgis_xia.new_lu_franchises AS fr ON ff.franchise = fr.franchise_code
+JOIN pgis_xia.i5seattle_p AS i5 ON ST_DWITHIN(ff.geom, i5.geom, 1609*2)
+ORDER BY ff.ff_id;
+
+SELECT fr.franchise_name, COUNT (DISTINCT ff.ff_id) AS tot
+FROM pgis_xia.new_fastfoods AS ff
+JOIN pgis_xia.new_lu_franchises AS fr ON ff.franchise = fr.franchise_code
+JOIN pgis_xia.i5seattle_p AS i5 ON ST_DWITHIN(ff.geom, i5.geom, 1609*2)
+GROUP BY fr.franchise_name
+ORDER BY tot DESC;
+
+SELECT county, ST_CENTROID(geom) AS centroid 
+                         FROM pgis_xia.kingcounty;
+						 
+SELECT DISTINCT franchise_name
+FROM pgis_xia.new_lu_franchises fr
+JOIN pgis_xia.new_fastfoods ff  ON fr.franchise_code = ff.franchise
+JOIN pgis_xia.kingcounty kc ON ST_CONTAINS (kc.geom, ff.geom)
+
+SELECT ST_DISTANCE(ST_GeometryFromText('point(-118.4079 33.9434)', 4326), 
+ST_GeometryFromText('point(2.3490 49.0083)', 4326));
+
+SELECT ST_DISTANCE(
+ST_GeographyFromText('point(-118.4079 33.9434)'), 
+ST_GeographyFromText('point(2.3490 49.0083)'));
+
+SELECT fr.franchise_name, 
+ST_distance(ff.geom, ST_centroid(pgis_xia.i5seattle_p.geom)) AS Distance
+FROM pgis_xia.lu_franchises fr
+JOIN pgis_xia.fastfoods ff 
+ON ff.franchise = fr.franchise_code, 
+pgis_xia.i5seattle_p
+ORDER BY Distance ASC;
+
+SELECT fr.franchise_name, 
+ST_distance(ff.geom, ST_centroid(pgis_xia.i5seattle_p.geom)) AS Distance
+FROM pgis_xia.new_lu_franchises fr
+JOIN pgis_xia.new_fastfoods ff 
+ON ff.franchise = fr.franchise_code, 
+pgis_xia.i5seattle_p
+ORDER BY Distance ASC;
