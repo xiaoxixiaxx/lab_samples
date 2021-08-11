@@ -1,0 +1,38 @@
+SELECT AddGeometryColumn ('pgis_xia','fastfoods','geom', 2163,'POINT',2);
+UPDATE pGIS_xia.fastfoods
+                              SET geom = ST_Transform
+                             (ST_GeomFromText ('POINT('||lon||' '||lat||')', 4326), 2163);
+CREATE INDEX idx_fastfoods_geom ON pGIS_xia.fastfoods USING gist(geom);
+SELECT * FROM pgis_xia.fastfoods;
+ALTER TABLE pgis_xia.fastfoods ADD CONSTRAINT fk_fastfoods_franchise
+            FOREIGN KEY (franchise)
+            REFERENCES pgis_xia.lu_franchises (franchise_code)
+            ON UPDATE CASCADE ON DELETE RESTRICT;
+
+SELECT * FROM pgis_xia.fastfoods;
+SELECT * FROM pgis_xia.lu_franchises;
+
+SELECT COUNT(*) FROM pgis_xia.fastfoods;
+SELECT COUNT(*) FROM pgis_xia.lu_franchises;
+
+SELECT ADDgeometrycolumn('pgis_xia','i5seattle_p','geom',2163,'multilinestring',2);
+UPDATE pgis_xia.i5seattle_p SET geom = ST_Transform(geom4326, 2163);
+
+SELECT ADDgeometrycolumn('pgis_xia','kingcounty','geom',2163,'multipolygon',2);
+UPDATE pgis_xia.kingcounty SET geom = ST_Transform(geom4326, 2163);
+
+SELECT * FROM pgis_xia.fastfoods;
+SELECT * FROM pgis_xia.i5seattle_p;
+SELECT * FROM pgis_xia.kingcounty;
+SELECT * FROM pgis_xia.lu_franchises;
+
+ALTER TABLE pgis_xia.lu_franchises ADD COLUMN lf_id SERIAL;
+ALTER TABLE pgis_xia.lu_franchises DROP COLUMN lf_id;
+
+
+SELECT franchise_name, COUNT(*) AS "total numbers of each franchise"
+FROM pgis_xia.fastfoods f
+	  JOIN pgis_xia.lu_franchises l 
+		ON f.franchise = l.franchise_code
+		GROUP BY franchise_name
+ORDER BY "total numbers of each franchise" desc; 
