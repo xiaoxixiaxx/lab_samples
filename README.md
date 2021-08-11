@@ -1,1 +1,1 @@
-# lab_samples
+# lab_samples (SQL syntax)
